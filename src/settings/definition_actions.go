@@ -56,7 +56,7 @@ func GetDefinitions(params configuration.GetDefinitionsParams) middleware.Respon
 			mypath := filepath.Join(store.dir, "definitions", f.Name())
 			item, err := store.readDefinition(mypath)
 			if err != nil {
-				fmt.Print("BAD DATA %s", f.Name)
+				fmt.Printf("BAD DATA %s\n", f.Name())
 			} else {
 				arr = append(arr, item)
 			}

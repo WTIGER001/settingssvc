@@ -26,7 +26,7 @@ func (fs *FileStore) writeProfile(item *models.Profile) error {
 	fmt.Printf("\tWriting Profile \n")
 
 	path := fs.pathToProfileVersion(item.ID, int(item.Version))
-	fmt.Print("Writing Proflie to file %s\n", path)
+	fmt.Printf("Writing Proflie to file %s\n", path)
 
 	return fs.write(path, item)
 }
@@ -55,7 +55,7 @@ func (fs *FileStore) readProfile(path string) (*models.Profile, error) {
 func (fs *FileStore) writeOwner(item *models.PreferenceOwner) error {
 
 	path := fs.pathToOwner(item.ID)
-	fmt.Print("Writing Owner to file %s\n", path)
+	fmt.Printf("Writing Owner to file %s\n", path)
 
 	return fs.write(path, item)
 }
@@ -80,7 +80,7 @@ func (fs *FileStore) readOwner(path string) (*models.PreferenceOwner, error) {
 func (fs *FileStore) writeType(item *models.OwnerType) error {
 
 	path := fs.pathToType(item.ID)
-	fmt.Print("Writing Type to file %s\n", path)
+	fmt.Printf("Writing Type to file %s\n", path)
 
 	return fs.write(path, item)
 }
@@ -105,7 +105,7 @@ func (fs *FileStore) readType(path string) (*models.OwnerType, error) {
 func (fs *FileStore) writeDefinition(item *models.PreferenceDefinition) error {
 
 	path := fs.pathToDefinition(item.ID)
-	fmt.Print("Writing Type to file %s\n", path)
+	fmt.Printf("Writing Type to file %s\n", path)
 
 	return fs.write(path, item.JsonData)
 }
@@ -228,7 +228,7 @@ func (fs *FileStore) ListProfiles(id string) ([]string, error) {
 func (fs *FileStore) makeDir(path string) error {
 	dir := filepath.Dir(path)
 	if err := os.MkdirAll(dir, os.ModePerm); err != nil {
-		fmt.Printf("Could not create path : \n", dir)
+		fmt.Printf("Could not create path : %s \n", dir)
 		return err
 	}
 	return nil
