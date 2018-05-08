@@ -8,10 +8,10 @@ package models
 import (
 	strfmt "github.com/go-openapi/strfmt"
 
-	"encoding/json"
-
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+
+	"encoding/json"
 )
 
 // PreferenceDefinition preference definition
@@ -36,7 +36,6 @@ type PreferenceDefinition struct {
 	// JSON Schema
 	Schema interface{} `json:"schema,omitempty"`
 
-	//HACK
 	JsonData map[string]*json.RawMessage `json:"-"`
 }
 

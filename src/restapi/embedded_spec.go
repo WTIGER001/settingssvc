@@ -29,7 +29,7 @@ func init() {
   },
   "basePath": "/",
   "paths": {
-    "/configuration": {
+    "/category": {
       "get": {
         "consumes": [
           "application/json"
@@ -40,17 +40,93 @@ func init() {
         "tags": [
           "Configuration"
         ],
-        "summary": "Get all configuration definitions",
-        "operationId": "getConfig",
+        "summary": "Get all category definitions",
+        "operationId": "getCategories",
         "responses": {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/Config"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Category"
+              }
             }
           },
           "405": {
             "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      },
+      "post": {
+        "consumes": [
+          "application/json"
+        ],
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Save categories",
+        "operationId": "addCategory",
+        "parameters": [
+          {
+            "description": "Category that needs to be added",
+            "name": "category",
+            "in": "body",
+            "required": true,
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success",
+            "schema": {
+              "$ref": "#/definitions/Category"
+            }
+          },
+          "405": {
+            "description": "Invalid input"
+          },
+          "500": {
+            "description": "Internal Error"
+          }
+        }
+      }
+    },
+    "/category/{name}": {
+      "delete": {
+        "produces": [
+          "application/json"
+        ],
+        "tags": [
+          "Configuration"
+        ],
+        "summary": "Deletes a category",
+        "operationId": "deleteCategory",
+        "parameters": [
+          {
+            "type": "string",
+            "description": "category name to delete",
+            "name": "name",
+            "in": "path",
+            "required": true
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "Success"
+          },
+          "400": {
+            "description": "Invalid ID supplied"
+          },
+          "404": {
+            "description": "Category not found"
           },
           "500": {
             "description": "Internal Error"
@@ -75,7 +151,10 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/PreferenceDefinitionArray"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/PreferenceDefinition"
+              }
             }
           },
           "405": {
@@ -591,7 +670,10 @@ func init() {
           "200": {
             "description": "successful operation",
             "schema": {
-              "$ref": "#/definitions/ProfileArray"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/Profile"
+              }
             }
           },
           "400": {
@@ -623,7 +705,10 @@ func init() {
           "200": {
             "description": "Success",
             "schema": {
-              "$ref": "#/definitions/OwnerTypeArray"
+              "type": "array",
+              "items": {
+                "$ref": "#/definitions/OwnerType"
+              }
             }
           },
           "405": {
@@ -795,14 +880,14 @@ func init() {
     }
   },
   "definitions": {
-    "Config": {
+    "Category": {
       "type": "object",
       "properties": {
-        "definitions": {
-          "$ref": "#/definitions/PreferenceDefinitionArray"
+        "name": {
+          "type": "string"
         },
-        "ownerTypes": {
-          "$ref": "#/definitions/OwnerTypeArray"
+        "order": {
+          "type": "integer"
         }
       }
     },
@@ -826,16 +911,10 @@ func init() {
         }
       }
     },
-    "OwnerTypeArray": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/OwnerType"
-      }
-    },
     "Preference": {
       "type": "object",
       "properties": {
-        "definition-id": {
+        "definitionId": {
           "type": "string"
         },
         "value": {
@@ -869,12 +948,6 @@ func init() {
         }
       }
     },
-    "PreferenceDefinitionArray": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/PreferenceDefinition"
-      }
-    },
     "PreferenceOwner": {
       "type": "object",
       "properties": {
@@ -884,14 +957,14 @@ func init() {
         "id": {
           "type": "string"
         },
-        "owner-type": {
-          "type": "string"
-        },
-        "profile-ids": {
+        "profileIds": {
           "type": "array",
           "items": {
             "type": "string"
           }
+        },
+        "type": {
+          "type": "string"
         }
       }
     },
@@ -899,6 +972,9 @@ func init() {
       "type": "object",
       "properties": {
         "id": {
+          "type": "string"
+        },
+        "name": {
           "type": "string"
         },
         "preferences": {
@@ -911,12 +987,6 @@ func init() {
           "type": "integer",
           "format": "int"
         }
-      }
-    },
-    "ProfileArray": {
-      "type": "array",
-      "items": {
-        "$ref": "#/definitions/Profile"
       }
     },
     "ProfileVersion": {

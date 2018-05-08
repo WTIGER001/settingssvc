@@ -25,7 +25,7 @@ type GetProfilesOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.ProfileArray `json:"body,omitempty"`
+	Payload models.GetProfilesOKBody `json:"body,omitempty"`
 }
 
 // NewGetProfilesOK creates GetProfilesOK with default headers values
@@ -34,13 +34,13 @@ func NewGetProfilesOK() *GetProfilesOK {
 }
 
 // WithPayload adds the payload to the get profiles o k response
-func (o *GetProfilesOK) WithPayload(payload models.ProfileArray) *GetProfilesOK {
+func (o *GetProfilesOK) WithPayload(payload models.GetProfilesOKBody) *GetProfilesOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get profiles o k response
-func (o *GetProfilesOK) SetPayload(payload models.ProfileArray) {
+func (o *GetProfilesOK) SetPayload(payload models.GetProfilesOKBody) {
 	o.Payload = payload
 }
 
@@ -50,7 +50,7 @@ func (o *GetProfilesOK) WriteResponse(rw http.ResponseWriter, producer runtime.P
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.ProfileArray, 0, 50)
+		payload = make(models.GetProfilesOKBody, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

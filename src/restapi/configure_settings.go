@@ -13,6 +13,8 @@ import (
 	"restapi/operations"
 	"restapi/operations/configuration"
 	"restapi/operations/preferences"
+
+	"github.com/rs/cors"
 )
 
 // This file is safe to edit. Once it exists it will not be overwritten
@@ -52,8 +54,13 @@ func configureAPI(api *operations.SettingsAPI) http.Handler {
 	api.ConfigurationUpdateOwnerTypeHandler = configuration.UpdateOwnerTypeHandlerFunc(settings.UpdateType)
 	api.ConfigurationGetTypeHandler = configuration.GetTypeHandlerFunc(settings.GetType)
 
+	// Categories
+	api.ConfigurationAddCategoryHandler = configuration.AddCategoryHandlerFunc(settings.AddCategory)
+	api.ConfigurationDeleteCategoryHandler = configuration.DeleteCategoryHandlerFunc(settings.DeleteCategory)
+	api.ConfigurationGetCategoriesHandler = configuration.GetCategoriesHandlerFunc(settings.GetCategories)
+
 	// Configuration
-	api.ConfigurationGetConfigHandler = configuration.GetConfigHandlerFunc(settings.GetConfig)
+	// api.ConfigurationGetConfigHandler = configuration.GetConfigHandlerFunc(settings.GetConfig)
 
 	// Owner
 	api.PreferencesDeleteOwnerHandler = preferences.DeleteOwnerHandlerFunc(settings.DeleteOwner)
@@ -94,5 +101,13 @@ func setupMiddlewares(handler http.Handler) http.Handler {
 // The middleware configuration happens before anything, this middleware also applies to serving the swagger.json document.
 // So this is a good place to plug in a panic handling middleware, logging and metrics
 func setupGlobalMiddleware(handler http.Handler) http.Handler {
-	return handler
+	corsHandler := cors.New(cors.Options{
+		Debug:          false,
+		AllowedHeaders: []string{"*"},
+		AllowedOrigins: []string{"*"},
+		AllowedMethods: []string{},
+		MaxAge:         1000,
+	})
+	return corsHandler.Handler(handler)
+	// return handler
 }

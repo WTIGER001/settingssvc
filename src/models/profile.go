@@ -10,7 +10,6 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
-
 	"encoding/json"
 )
 
@@ -21,13 +20,15 @@ type Profile struct {
 	// id
 	ID string `json:"id,omitempty"`
 
+	// name
+	Name string `json:"name,omitempty"`
+
 	// preferences
 	Preferences ProfilePreferences `json:"preferences"`
 
 	// version
 	Version int64 `json:"version,omitempty"`
 
-	//HACK
 	JsonData map[string]*json.RawMessage `json:"-"`
 }
 

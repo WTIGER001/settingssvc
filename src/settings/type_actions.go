@@ -154,8 +154,3 @@ func DeleteType(params configuration.DeleteTypeParams) middleware.Responder {
 
 	return configuration.NewDeleteTypeOK()
 }
-
-// GetConfig packages types and definitions into a single request
-func GetConfig(params configuration.GetConfigParams) middleware.Responder {
-	return configuration.NewGetConfigInternalServerError()
-}

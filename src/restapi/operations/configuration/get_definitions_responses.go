@@ -25,7 +25,7 @@ type GetDefinitionsOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.PreferenceDefinitionArray `json:"body,omitempty"`
+	Payload models.GetDefinitionsOKBody `json:"body,omitempty"`
 }
 
 // NewGetDefinitionsOK creates GetDefinitionsOK with default headers values
@@ -34,13 +34,13 @@ func NewGetDefinitionsOK() *GetDefinitionsOK {
 }
 
 // WithPayload adds the payload to the get definitions o k response
-func (o *GetDefinitionsOK) WithPayload(payload models.PreferenceDefinitionArray) *GetDefinitionsOK {
+func (o *GetDefinitionsOK) WithPayload(payload models.GetDefinitionsOKBody) *GetDefinitionsOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get definitions o k response
-func (o *GetDefinitionsOK) SetPayload(payload models.PreferenceDefinitionArray) {
+func (o *GetDefinitionsOK) SetPayload(payload models.GetDefinitionsOKBody) {
 	o.Payload = payload
 }
 
@@ -50,7 +50,7 @@ func (o *GetDefinitionsOK) WriteResponse(rw http.ResponseWriter, producer runtim
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.PreferenceDefinitionArray, 0, 50)
+		payload = make(models.GetDefinitionsOKBody, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

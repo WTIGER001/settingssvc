@@ -25,7 +25,7 @@ type GetOwnerTypesOK struct {
 	/*
 	  In: Body
 	*/
-	Payload models.OwnerTypeArray `json:"body,omitempty"`
+	Payload models.GetOwnerTypesOKBody `json:"body,omitempty"`
 }
 
 // NewGetOwnerTypesOK creates GetOwnerTypesOK with default headers values
@@ -34,13 +34,13 @@ func NewGetOwnerTypesOK() *GetOwnerTypesOK {
 }
 
 // WithPayload adds the payload to the get owner types o k response
-func (o *GetOwnerTypesOK) WithPayload(payload models.OwnerTypeArray) *GetOwnerTypesOK {
+func (o *GetOwnerTypesOK) WithPayload(payload models.GetOwnerTypesOKBody) *GetOwnerTypesOK {
 	o.Payload = payload
 	return o
 }
 
 // SetPayload sets the payload to the get owner types o k response
-func (o *GetOwnerTypesOK) SetPayload(payload models.OwnerTypeArray) {
+func (o *GetOwnerTypesOK) SetPayload(payload models.GetOwnerTypesOKBody) {
 	o.Payload = payload
 }
 
@@ -50,7 +50,7 @@ func (o *GetOwnerTypesOK) WriteResponse(rw http.ResponseWriter, producer runtime
 	rw.WriteHeader(200)
 	payload := o.Payload
 	if payload == nil {
-		payload = make(models.OwnerTypeArray, 0, 50)
+		payload = make(models.GetOwnerTypesOKBody, 0, 50)
 	}
 
 	if err := producer.Produce(rw, payload); err != nil {

@@ -16,8 +16,8 @@ import (
 // swagger:model Preference
 type Preference struct {
 
-	// definition id
-	DefinitionID string `json:"definition-id,omitempty"`
+	// definition Id
+	DefinitionID string `json:"definitionId,omitempty"`
 
 	// value
 	Value interface{} `json:"value,omitempty"`

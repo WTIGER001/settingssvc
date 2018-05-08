@@ -32,6 +32,8 @@ func ProducePreferenceDef(writer io.Writer, data interface{}) error {
 func JSONConsumer() runtime.Consumer {
 	return runtime.ConsumerFunc(func(reader io.Reader, data interface{}) error {
 		var sample *models.PreferenceDefinition
+		var pSample *models.Profile
+
 		if reflect.TypeOf(data) == reflect.TypeOf(sample) {
 			fmt.Println("USING SPECIAL CONSUMER")
 
@@ -42,6 +44,17 @@ func JSONConsumer() runtime.Consumer {
 					return err
 				}
 				return readPreferenceDefinition(all, original)
+			}
+		} else if reflect.TypeOf(data) == reflect.TypeOf(pSample) {
+			fmt.Println("USING SPECIAL CONSUMER")
+
+			original, ok := data.(*models.Profile)
+			if ok {
+				all, err := ioutil.ReadAll(reader)
+				if err != nil {
+					return err
+				}
+				return readProfile(all, original)
 			}
 		}
 

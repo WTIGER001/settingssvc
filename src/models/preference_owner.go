@@ -22,11 +22,11 @@ type PreferenceOwner struct {
 	// id
 	ID string `json:"id,omitempty"`
 
-	// owner type
-	OwnerType string `json:"owner-type,omitempty"`
-
 	// profile ids
-	ProfileIds []string `json:"profile-ids"`
+	ProfileIds []string `json:"profileIds"`
+
+	// type
+	Type string `json:"type,omitempty"`
 }
 
 // Validate validates this preference owner

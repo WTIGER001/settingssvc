@@ -38,11 +38,17 @@ func NewSettingsAPI(spec *loads.Document) *SettingsAPI {
 		BearerAuthenticator: security.BearerAuth,
 		JSONConsumer:        runtime.JSONConsumer(),
 		JSONProducer:        runtime.JSONProducer(),
+		ConfigurationAddCategoryHandler: configuration.AddCategoryHandlerFunc(func(params configuration.AddCategoryParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConfigurationAddCategory has not yet been implemented")
+		}),
 		ConfigurationAddDefinitionHandler: configuration.AddDefinitionHandlerFunc(func(params configuration.AddDefinitionParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConfigurationAddDefinition has not yet been implemented")
 		}),
 		ConfigurationAddOwnerTypeHandler: configuration.AddOwnerTypeHandlerFunc(func(params configuration.AddOwnerTypeParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConfigurationAddOwnerType has not yet been implemented")
+		}),
+		ConfigurationDeleteCategoryHandler: configuration.DeleteCategoryHandlerFunc(func(params configuration.DeleteCategoryParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConfigurationDeleteCategory has not yet been implemented")
 		}),
 		ConfigurationDeleteDefinitionHandler: configuration.DeleteDefinitionHandlerFunc(func(params configuration.DeleteDefinitionParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConfigurationDeleteDefinition has not yet been implemented")
@@ -56,8 +62,8 @@ func NewSettingsAPI(spec *loads.Document) *SettingsAPI {
 		ConfigurationDeleteTypeHandler: configuration.DeleteTypeHandlerFunc(func(params configuration.DeleteTypeParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConfigurationDeleteType has not yet been implemented")
 		}),
-		ConfigurationGetConfigHandler: configuration.GetConfigHandlerFunc(func(params configuration.GetConfigParams) middleware.Responder {
-			return middleware.NotImplemented("operation ConfigurationGetConfig has not yet been implemented")
+		ConfigurationGetCategoriesHandler: configuration.GetCategoriesHandlerFunc(func(params configuration.GetCategoriesParams) middleware.Responder {
+			return middleware.NotImplemented("operation ConfigurationGetCategories has not yet been implemented")
 		}),
 		ConfigurationGetDefinitionHandler: configuration.GetDefinitionHandlerFunc(func(params configuration.GetDefinitionParams) middleware.Responder {
 			return middleware.NotImplemented("operation ConfigurationGetDefinition has not yet been implemented")
@@ -127,10 +133,14 @@ type SettingsAPI struct {
 	// JSONProducer registers a producer for a "application/json" mime type
 	JSONProducer runtime.Producer
 
+	// ConfigurationAddCategoryHandler sets the operation handler for the add category operation
+	ConfigurationAddCategoryHandler configuration.AddCategoryHandler
 	// ConfigurationAddDefinitionHandler sets the operation handler for the add definition operation
 	ConfigurationAddDefinitionHandler configuration.AddDefinitionHandler
 	// ConfigurationAddOwnerTypeHandler sets the operation handler for the add owner type operation
 	ConfigurationAddOwnerTypeHandler configuration.AddOwnerTypeHandler
+	// ConfigurationDeleteCategoryHandler sets the operation handler for the delete category operation
+	ConfigurationDeleteCategoryHandler configuration.DeleteCategoryHandler
 	// ConfigurationDeleteDefinitionHandler sets the operation handler for the delete definition operation
 	ConfigurationDeleteDefinitionHandler configuration.DeleteDefinitionHandler
 	// PreferencesDeleteOwnerHandler sets the operation handler for the delete owner operation
@@ -139,8 +149,8 @@ type SettingsAPI struct {
 	PreferencesDeleteProfileHandler preferences.DeleteProfileHandler
 	// ConfigurationDeleteTypeHandler sets the operation handler for the delete type operation
 	ConfigurationDeleteTypeHandler configuration.DeleteTypeHandler
-	// ConfigurationGetConfigHandler sets the operation handler for the get config operation
-	ConfigurationGetConfigHandler configuration.GetConfigHandler
+	// ConfigurationGetCategoriesHandler sets the operation handler for the get categories operation
+	ConfigurationGetCategoriesHandler configuration.GetCategoriesHandler
 	// ConfigurationGetDefinitionHandler sets the operation handler for the get definition operation
 	ConfigurationGetDefinitionHandler configuration.GetDefinitionHandler
 	// ConfigurationGetDefinitionsHandler sets the operation handler for the get definitions operation
@@ -230,12 +240,20 @@ func (o *SettingsAPI) Validate() error {
 		unregistered = append(unregistered, "JSONProducer")
 	}
 
+	if o.ConfigurationAddCategoryHandler == nil {
+		unregistered = append(unregistered, "configuration.AddCategoryHandler")
+	}
+
 	if o.ConfigurationAddDefinitionHandler == nil {
 		unregistered = append(unregistered, "configuration.AddDefinitionHandler")
 	}
 
 	if o.ConfigurationAddOwnerTypeHandler == nil {
 		unregistered = append(unregistered, "configuration.AddOwnerTypeHandler")
+	}
+
+	if o.ConfigurationDeleteCategoryHandler == nil {
+		unregistered = append(unregistered, "configuration.DeleteCategoryHandler")
 	}
 
 	if o.ConfigurationDeleteDefinitionHandler == nil {
@@ -254,8 +272,8 @@ func (o *SettingsAPI) Validate() error {
 		unregistered = append(unregistered, "configuration.DeleteTypeHandler")
 	}
 
-	if o.ConfigurationGetConfigHandler == nil {
-		unregistered = append(unregistered, "configuration.GetConfigHandler")
+	if o.ConfigurationGetCategoriesHandler == nil {
+		unregistered = append(unregistered, "configuration.GetCategoriesHandler")
 	}
 
 	if o.ConfigurationGetDefinitionHandler == nil {
@@ -403,12 +421,22 @@ func (o *SettingsAPI) initHandlerCache() {
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
+	o.handlers["POST"]["/category"] = configuration.NewAddCategory(o.context, o.ConfigurationAddCategoryHandler)
+
+	if o.handlers["POST"] == nil {
+		o.handlers["POST"] = make(map[string]http.Handler)
+	}
 	o.handlers["POST"]["/definition"] = configuration.NewAddDefinition(o.context, o.ConfigurationAddDefinitionHandler)
 
 	if o.handlers["POST"] == nil {
 		o.handlers["POST"] = make(map[string]http.Handler)
 	}
 	o.handlers["POST"]["/type"] = configuration.NewAddOwnerType(o.context, o.ConfigurationAddOwnerTypeHandler)
+
+	if o.handlers["DELETE"] == nil {
+		o.handlers["DELETE"] = make(map[string]http.Handler)
+	}
+	o.handlers["DELETE"]["/category/{name}"] = configuration.NewDeleteCategory(o.context, o.ConfigurationDeleteCategoryHandler)
 
 	if o.handlers["DELETE"] == nil {
 		o.handlers["DELETE"] = make(map[string]http.Handler)
@@ -433,7 +461,7 @@ func (o *SettingsAPI) initHandlerCache() {
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)
 	}
-	o.handlers["GET"]["/configuration"] = configuration.NewGetConfig(o.context, o.ConfigurationGetConfigHandler)
+	o.handlers["GET"]["/category"] = configuration.NewGetCategories(o.context, o.ConfigurationGetCategoriesHandler)
 
 	if o.handlers["GET"] == nil {
 		o.handlers["GET"] = make(map[string]http.Handler)

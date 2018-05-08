@@ -77,6 +77,31 @@ func (fs *FileStore) readOwner(path string) (*models.PreferenceOwner, error) {
 	return result, nil
 }
 
+func (fs *FileStore) writeCategory(item *models.Category) error {
+
+	path := fs.pathToCategory(item.Name)
+	fmt.Printf("Writing Category to file %s\n", path)
+
+	return fs.write(path, item)
+}
+
+func (fs *FileStore) readCategory(path string) (*models.Category, error) {
+	fmt.Printf("Reading File\n")
+	bytes, err := ioutil.ReadFile(path)
+	if err != nil {
+		fmt.Printf("Errpr reading file: %s\n", err.Error())
+		return nil, err
+	}
+
+	// Unmarshall "most" of this object.
+	result := &models.Category{}
+	err = json.Unmarshal(bytes, result)
+	if err != nil {
+		return nil, err
+	}
+	return result, nil
+}
+
 func (fs *FileStore) writeType(item *models.OwnerType) error {
 
 	path := fs.pathToType(item.ID)
@@ -120,6 +145,7 @@ func (fs *FileStore) readDefinition(path string) (*models.PreferenceDefinition, 
 
 	// Unmarshall "most" of this object.
 	result := &models.PreferenceDefinition{}
+
 	err = readPreferenceDefinition(bytes, result)
 	if err != nil {
 		return nil, err
@@ -141,6 +167,9 @@ func (fs *FileStore) pathToDefinition(id string) string {
 }
 func (fs *FileStore) pathToType(id string) string {
 	return fs.dir + "/types/" + id + ".type.json"
+}
+func (fs *FileStore) pathToCategory(id string) string {
+	return fs.dir + "/categories/" + id + ".category.json"
 }
 func (fs *FileStore) pathToOwner(id string) string {
 	return fs.dir + "/owners/" + id + ".owner.json"
