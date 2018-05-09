@@ -25,8 +25,8 @@ type FileStore struct {
 func (fs *FileStore) writeProfile(item *models.Profile) error {
 	fmt.Printf("\tWriting Profile \n")
 
-	path := fs.pathToProfileVersion(item.ID, int(item.Version))
-	fmt.Printf("Writing Proflie to file %s\n", path)
+	path := fs.pathToProfileVersionOwner(item.ID, int(item.Version), item.Owner)
+	fmt.Printf("Writing profile to file %s\n", path)
 
 	return fs.write(path, item)
 }
@@ -38,6 +38,7 @@ func (fs *FileStore) readProfile(path string) (*models.Profile, error) {
 		fmt.Printf("Error reading file: %s\n", err.Error())
 		return nil, err
 	}
+	fmt.Printf("\tRead %d bytes\n", len(bytes))
 
 	// Unmarshall "most" of this object.
 	result := &models.Profile{}
@@ -45,9 +46,11 @@ func (fs *FileStore) readProfile(path string) (*models.Profile, error) {
 	if err != nil {
 		return nil, err
 	}
+	fmt.Printf("\tUnmarshalled %s\n", result.ID)
 
 	// now read the value
 	err = readProfile(bytes, result)
+	fmt.Printf("\tComplete %s\n", result.ID)
 
 	return result, nil
 }
@@ -174,28 +177,33 @@ func (fs *FileStore) pathToCategory(id string) string {
 func (fs *FileStore) pathToOwner(id string) string {
 	return fs.dir + "/owners/" + id + ".owner.json"
 }
+
 func (fs *FileStore) pathToProfileVersion(id string, version int) string {
-	return fmt.Sprintf("%s/profiles/%s.v%d.profile.json", fs.dir, id, version)
+	file, _ := fs.ListProfileVersion(id, version)
+	return file
+}
+func (fs *FileStore) pathToProfileVersionOwner(id string, version int, owner string) string {
+	return fmt.Sprintf("%s/profiles/%s.%s.v%d.profile.json", fs.dir, owner, id, version)
 }
 func (fs *FileStore) pathToProfile(id string) string {
-	maxVersion := fs.LatestProfileVersion(id)
-	return fs.pathToProfileVersion(id, maxVersion)
+	maxVersion, owner := fs.LatestProfileVersion(id)
+	return fs.pathToProfileVersionOwner(id, maxVersion, owner)
 }
 
 // LatestProfileVersion finds the largest version for a single profile.
 // A return of 0 means that no version was found
-func (fs *FileStore) LatestProfileVersion(id string) int {
+func (fs *FileStore) LatestProfileVersion(id string) (int, string) {
 	fmt.Printf("Listing Profiles\n")
-
+	var owner string
 	files, err := fs.ListProfiles(id)
 	if err != nil {
-		return 0
+		return 0, ""
 	}
 	fmt.Printf("\tfound %d\n", len(files))
 
 	var max int
 	for _, f := range files {
-		v, err := ExtractVersion(f)
+		v, _, err := ExtractVersionOwner(f)
 		fmt.Printf("\tfound version %d\n", v)
 
 		if err != nil {
@@ -207,12 +215,12 @@ func (fs *FileStore) LatestProfileVersion(id string) int {
 		}
 	}
 
-	return max
+	return max, owner
 }
 
 //ProfileVersionDate gets the date of a profile version
 func (fs *FileStore) ProfileVersionDate(profileName string) (time.Time, error) {
-	path := fs.dir + "/owners/" + profileName
+	path := fs.dir + "/profile/" + profileName
 	return fs.getFileDate(path)
 }
 
@@ -224,8 +232,8 @@ func (fs *FileStore) getFileDate(path string) (time.Time, error) {
 	return stat.ModTime(), nil
 }
 
-// ExtractVersion gets the version from a filename or path
-func ExtractVersion(filename string) (int, error) {
+//ExtractVersionOwner gets the version from a filename or path
+func ExtractVersionOwner(filename string) (int, string, error) {
 	fmt.Printf("Extract Version %s\n", filename)
 
 	parts := strings.Split(filename, ".")
@@ -240,19 +248,44 @@ func ExtractVersion(filename string) (int, error) {
 
 	v, err := strconv.Atoi(versionstr)
 	if err != nil {
-		return 0, err
+		return 0, "", err
 	}
 	fmt.Printf("\t%d\n", v)
 
-	return v, nil
+	return v, parts[0], nil
 }
 
 //ListProfiles for an id
 func (fs *FileStore) ListProfiles(id string) ([]string, error) {
-	part := fs.dir + "/profiles/" + id + "*.profile.json"
+	part := fs.dir + "/profiles/*." + id + ".v*.profile.json"
 	files, err := filepath.Glob(part)
 	return files, err
 }
+
+// ListProfilesForOwner ...
+func (fs *FileStore) ListProfilesForOwner(owner string) ([]string, error) {
+	part := fmt.Sprintf("%s/profiles/%s.*.*.profile.json", fs.dir, owner)
+
+	files, err := filepath.Glob(part)
+	return files, err
+}
+
+// ListProfileVersion ...
+func (fs *FileStore) ListProfileVersion(id string, version int) (string, error) {
+	// part := fs.dir + "/profiles/*." + id + ".v" + .profile.json"
+	part := fmt.Sprintf("%s/profiles/*.%s.v%d.profile.json", fs.dir, id, version)
+	files, err := filepath.Glob(part)
+	if len(files) == 1 {
+		return fmt.Sprintf("%s/profiles/%s", fs.dir, files[0]), err
+	}
+	return "", err
+}
+
+// func (fs *FileStore) ListProfiles(id string) ([]string, error) {
+// 	part := fs.dir + "/profiles/" + id + "*.profile.json"
+// 	files, err := filepath.Glob(part)
+// 	return files, err
+// }
 
 func (fs *FileStore) makeDir(path string) error {
 	dir := filepath.Dir(path)

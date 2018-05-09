@@ -662,8 +662,13 @@ func init() {
             },
             "description": "ID of type to return",
             "name": "id",
-            "in": "query",
-            "required": true
+            "in": "query"
+          },
+          {
+            "type": "string",
+            "description": "ID of owner",
+            "name": "ownerid",
+            "in": "query"
           }
         ],
         "responses": {
@@ -957,12 +962,6 @@ func init() {
         "id": {
           "type": "string"
         },
-        "profileIds": {
-          "type": "array",
-          "items": {
-            "type": "string"
-          }
-        },
         "type": {
           "type": "string"
         }
@@ -975,6 +974,9 @@ func init() {
           "type": "string"
         },
         "name": {
+          "type": "string"
+        },
+        "owner": {
           "type": "string"
         },
         "preferences": {
@@ -996,7 +998,7 @@ func init() {
           "type": "integer",
           "format": "int"
         },
-        "version-date": {
+        "versionDate": {
           "type": "string",
           "format": "date-time"
         }

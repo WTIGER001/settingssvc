@@ -22,9 +22,6 @@ type PreferenceOwner struct {
 	// id
 	ID string `json:"id,omitempty"`
 
-	// profile ids
-	ProfileIds []string `json:"profileIds"`
-
 	// type
 	Type string `json:"type,omitempty"`
 }
@@ -33,23 +30,9 @@ type PreferenceOwner struct {
 func (m *PreferenceOwner) Validate(formats strfmt.Registry) error {
 	var res []error
 
-	if err := m.validateProfileIds(formats); err != nil {
-		// prop
-		res = append(res, err)
-	}
-
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
-	return nil
-}
-
-func (m *PreferenceOwner) validateProfileIds(formats strfmt.Registry) error {
-
-	if swag.IsZero(m.ProfileIds) { // not required
-		return nil
-	}
-
 	return nil
 }
 

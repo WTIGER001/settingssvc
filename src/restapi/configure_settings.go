@@ -105,7 +105,7 @@ func setupGlobalMiddleware(handler http.Handler) http.Handler {
 		Debug:          false,
 		AllowedHeaders: []string{"*"},
 		AllowedOrigins: []string{"*"},
-		AllowedMethods: []string{},
+		AllowedMethods: []string{"GET", "POST", "DELETE", "PUT", "PATCH"},
 		MaxAge:         1000,
 	})
 	return corsHandler.Handler(handler)

@@ -33,10 +33,13 @@ type GetProfilesParams struct {
 	HTTPRequest *http.Request `json:"-"`
 
 	/*ID of type to return
-	  Required: true
 	  In: query
 	*/
 	ID []string
+	/*ID of owner
+	  In: query
+	*/
+	Ownerid *string
 }
 
 // BindRequest both binds and validates a request, it assumes that complex things implement a Validatable(strfmt.Registry) error interface
@@ -52,6 +55,11 @@ func (o *GetProfilesParams) BindRequest(r *http.Request, route *middleware.Match
 		res = append(res, err)
 	}
 
+	qOwnerid, qhkOwnerid, _ := qs.GetOK("ownerid")
+	if err := o.bindOwnerid(qOwnerid, qhkOwnerid, route.Formats); err != nil {
+		res = append(res, err)
+	}
+
 	if len(res) > 0 {
 		return errors.CompositeValidationError(res...)
 	}
@@ -59,9 +67,6 @@ func (o *GetProfilesParams) BindRequest(r *http.Request, route *middleware.Match
 }
 
 func (o *GetProfilesParams) bindID(rawData []string, hasKey bool, formats strfmt.Registry) error {
-	if !hasKey {
-		return errors.Required("id", "query")
-	}
 
 	var qvID string
 	if len(rawData) > 0 {
@@ -71,7 +76,7 @@ func (o *GetProfilesParams) bindID(rawData []string, hasKey bool, formats strfmt
 	iDIC := swag.SplitByFormat(qvID, "")
 
 	if len(iDIC) == 0 {
-		return errors.Required("id", "query")
+		return nil
 	}
 
 	var iDIR []string
@@ -82,6 +87,20 @@ func (o *GetProfilesParams) bindID(rawData []string, hasKey bool, formats strfmt
 	}
 
 	o.ID = iDIR
+
+	return nil
+}
+
+func (o *GetProfilesParams) bindOwnerid(rawData []string, hasKey bool, formats strfmt.Registry) error {
+	var raw string
+	if len(rawData) > 0 {
+		raw = rawData[len(rawData)-1]
+	}
+	if raw == "" { // empty values pass all other validations
+		return nil
+	}
+
+	o.Ownerid = &raw
 
 	return nil
 }

@@ -20,7 +20,7 @@ type ProfileVersion struct {
 	Version int64 `json:"version,omitempty"`
 
 	// version date
-	VersionDate strfmt.DateTime `json:"version-date,omitempty"`
+	VersionDate strfmt.DateTime `json:"versionDate,omitempty"`
 }
 
 // Validate validates this profile version

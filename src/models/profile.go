@@ -10,6 +10,7 @@ import (
 
 	"github.com/go-openapi/errors"
 	"github.com/go-openapi/swag"
+
 	"encoding/json"
 )
 
@@ -22,6 +23,9 @@ type Profile struct {
 
 	// name
 	Name string `json:"name,omitempty"`
+
+	// owner
+	Owner string `json:"owner,omitempty"`
 
 	// preferences
 	Preferences ProfilePreferences `json:"preferences"`

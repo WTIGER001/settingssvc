@@ -15,7 +15,8 @@ import (
 
 // GetProfilesURL generates an URL for the get profiles operation
 type GetProfilesURL struct {
-	ID []string
+	ID      []string
+	Ownerid *string
 
 	_basePath string
 	// avoid unkeyed usage
@@ -66,6 +67,14 @@ func (o *GetProfilesURL) Build() (*url.URL, error) {
 		if qsv != "" {
 			qs.Set("id", qsv)
 		}
+	}
+
+	var ownerid string
+	if o.Ownerid != nil {
+		ownerid = *o.Ownerid
+	}
+	if ownerid != "" {
+		qs.Set("ownerid", ownerid)
 	}
 
 	result.RawQuery = qs.Encode()
