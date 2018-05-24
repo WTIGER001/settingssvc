@@ -25,10 +25,12 @@ import (
 	"net/http"
 	"os"
 	"path/filepath"
+	"strconv"
 	"strings"
 	"time"
 
 	"github.com/mitchellh/go-homedir"
+	"github.com/wtiger001/settingssvc/models"
 )
 
 var modelTypes = []string{
@@ -49,6 +51,7 @@ type command struct {
 	version   string
 }
 
+// Config ...
 type Config struct {
 	Baseurl string
 }
@@ -87,15 +90,60 @@ func main() {
 }
 
 func handleAdd() {
+	if len(os.Args) < 4 {
+		fatalf("Not enough arguments")
+	}
 
+	r := &request{
+		modelType: os.Args[2],
+		method:    "post",
+	}
+	completeBody(r)
+	issueRequest(r)
+}
+
+func completeBody(r *request) {
+	fields := mapArgs()
+
+	if val, ok := fields["data"]; ok {
+		r.body = val
+	} else if val, ok := fields["f"]; ok {
+		bytes, err := ioutil.ReadFile(val)
+		fatal(err)
+		r.body = string(bytes)
+	} else {
+		object, err := makeObject(r.modelType, fields)
+		fatal(err)
+		r.body = object
+	}
 }
 
 func handleDelete() {
+	if len(os.Args) < 4 {
+		fatalf("Not enough arguments")
+	}
 
+	r := &request{
+		modelType: os.Args[2],
+		id:        os.Args[3],
+		method:    "delete",
+	}
+
+	issueRequest(r)
 }
 
 func handleUpdate() {
+	if len(os.Args) < 4 {
+		fatalf("Not enough arguments")
+	}
 
+	r := &request{
+		modelType: os.Args[2],
+		id:        os.Args[3],
+		method:    "put",
+	}
+	completeBody(r)
+	issueRequest(r)
 }
 
 func handleGet() {
@@ -108,6 +156,16 @@ func handleGet() {
 		id:        id,
 		method:    "get",
 	}
+
+	fields := mapArgs()
+	if val, ok := fields["version"]; ok {
+		r.version = val
+	} else {
+		if contains(os.Args, "versions") && r.modelType == "profile" {
+			r.modelType = "profile/versions"
+		}
+	}
+
 	issueRequest(r)
 }
 
@@ -115,6 +173,8 @@ type request struct {
 	modelType string
 	id        string
 	method    string
+	body      string
+	version   string
 }
 
 func (r *request) url() string {
@@ -137,9 +197,8 @@ func issueRequest(r *request) {
 		fatal(err)
 	}
 	res, err := netClient.Do(req)
-	if err != nil {
-		fatal(err)
-	}
+	fatal(err)
+
 	if res.StatusCode >= 400 && res.StatusCode < 500 {
 		fatalf(res.Status)
 	}
@@ -213,8 +272,10 @@ func handleConfigureCommand() {
 }
 
 func fatal(err error) {
-	fmt.Printf("Errors: %s\n", err.Error())
-	os.Exit(1)
+	if err != nil {
+		fmt.Printf("Errors: %s\n", err.Error())
+		os.Exit(1)
+	}
 }
 
 func debugf(message string, items ...interface{}) {
@@ -268,4 +329,113 @@ func makeRequest(cmd *command) error {
 // Make a url for the command
 func (cmd *command) url() (string, error) {
 	return "", nil
+}
+
+func makeObject(modelType string, fields map[string]string) (string, error) {
+	var item interface{}
+	var err error
+	switch modelType {
+	case "category":
+		item, err = makeCategory(fields)
+	case "type":
+		item, err = makeType(fields)
+	case "definition":
+		item, err = makeDefinition(fields)
+	case "owner":
+		item, err = makeOwner(fields)
+	case "profile":
+	}
+
+	if err != nil {
+		fatal(err)
+	}
+
+	bytes, err := json.Marshal(item)
+	if err != nil {
+		fatal(err)
+	}
+
+	return string(bytes), nil
+}
+
+func makeDefinition(fields map[string]string) (*models.PreferenceDefinition, error) {
+	item := &models.PreferenceDefinition{}
+
+	if val, ok := fields["id"]; ok {
+		item.ID = val
+	}
+	if val, ok := fields["name"]; ok {
+		item.Name = val
+	}
+	if val, ok := fields["order"]; ok {
+		v, err := strconv.Atoi(val)
+		if err != nil {
+			return nil, err
+		}
+		item.Order = int64(v)
+	}
+	if val, ok := fields["category"]; ok {
+		item.Category = val
+	}
+
+	// if val, ok := fields["layout"]; ok {
+	// 	item.Layout = val
+	// }
+
+	if val, ok := fields["schema"]; ok {
+		item.Schema = val
+	}
+
+	return item, nil
+}
+
+func makeCategory(fields map[string]string) (*models.Category, error) {
+	item := &models.Category{}
+
+	if val, ok := fields["id"]; ok {
+		item.ID = val
+	}
+	if val, ok := fields["name"]; ok {
+		item.Name = val
+	}
+	if val, ok := fields["order"]; ok {
+		v, err := strconv.Atoi(val)
+		if err != nil {
+			return nil, err
+		}
+		item.Order = int64(v)
+	}
+
+	return item, nil
+}
+
+func makeOwner(fields map[string]string) (*models.PreferenceOwner, error) {
+	item := &models.PreferenceOwner{}
+
+	if val, ok := fields["id"]; ok {
+		item.ID = val
+	}
+	if val, ok := fields["active"]; ok {
+		item.Active = val
+	}
+	if val, ok := fields["type"]; ok {
+		item.Type = val
+	}
+
+	return item, nil
+}
+
+func makeType(fields map[string]string) (*models.OwnerType, error) {
+	item := &models.OwnerType{}
+
+	if val, ok := fields["id"]; ok {
+		item.ID = val
+	}
+	if val, ok := fields["name"]; ok {
+		item.Name = val
+	}
+	if val, ok := fields["description"]; ok {
+		item.Description = val
+	}
+	return item, nil
 }
