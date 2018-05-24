@@ -99,13 +99,13 @@ func handleUpdate() {
 }
 
 func handleGet() {
-	modelType := os.Args[2]
-	// id := ""
-	// if len(os.Args) >= 4 {
-	// 	id = os.Args[3]
-	// }
+	id := ""
+	if len(os.Args) >= 4 {
+		id = os.Args[3]
+	}
 	r := &request{
-		modelType: modelType,
+		modelType: os.Args[2],
+		id:        id,
 		method:    "get",
 	}
 	issueRequest(r)
@@ -113,12 +113,15 @@ func handleGet() {
 
 type request struct {
 	modelType string
+	id        string
 	method    string
 }
 
 func (r *request) url() string {
 	val := cfg.Baseurl + "/" + r.modelType
-
+	if r.id != "" {
+		val += "/" + r.id
+	}
 	return val
 }
 
@@ -128,35 +131,27 @@ func issueRequest(r *request) {
 	}
 
 	url := r.url()
-	switch r.method {
-	case "get":
-		res, err := netClient.Get(url)
-		if err != nil {
-			fatal(err)
-		}
-		bytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			fatal(err)
-		}
-		fmt.Println(string(bytes))
-	case "delete":
-		req, err := http.NewRequest("DELETE", url, nil)
 
-		if err != nil {
-			fatal(err)
-		}
-		res, err := netClient.Do(req)
-		if err != nil {
-			fatal(err)
-		}
-		bytes, err := ioutil.ReadAll(res.Body)
-		if err != nil {
-			fatal(err)
-		}
-		fmt.Println(string(bytes))
+	req, err := http.NewRequest(r.method, url, nil)
+	if err != nil {
+		fatal(err)
+	}
+	res, err := netClient.Do(req)
+	if err != nil {
+		fatal(err)
+	}
+	if res.StatusCode >= 400 && res.StatusCode < 500 {
+		fatalf(res.Status)
+	}
+	if res.StatusCode >= 500 {
+		fatalf(res.Status)
 	}
 
-	// response, _ := netClient.Get(cmd.url())
+	bytes, err := ioutil.ReadAll(res.Body)
+	if err != nil {
+		fatal(err)
+	}
+	fmt.Println(string(bytes))
 
 }
 
