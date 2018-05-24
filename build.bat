@@ -1,3 +1,3 @@
 set GOPATH=c:\dev\projects\settingssvc
-cd c:\dev\projects\settingssvc\src\cmd\settings-server
+cd %GOPATH%\src\github.com\wtiger001\settingssvc\cmd\settings-server
 go install 
