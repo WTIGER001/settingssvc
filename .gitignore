@@ -1,3 +1,4 @@
 src/github.com/docker/go-units
 src/github.com/wtiger001/settingssvc/vendor
 pkg
+pkg/windows_amd64/github.com/wtiger001/settingssvc/vendor/github.com/go-pg/pg.a
