@@ -18,9 +18,12 @@ Commands:
 
 */
 import (
+	"bufio"
+	"bytes"
 	"encoding/json"
 	"flag"
 	"fmt"
+	"io"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -29,6 +32,8 @@ import (
 	"strings"
 	"time"
 
+	"github.com/andrew-d/go-termutil"
+	"github.com/google/uuid"
 	"github.com/mitchellh/go-homedir"
 	"github.com/wtiger001/settingssvc/models"
 )
@@ -53,14 +58,22 @@ type command struct {
 
 // Config ...
 type Config struct {
-	Baseurl string
+	Baseurl    string
+	PrettyJSON bool
 }
 
-const debug = true
-
+var debug = false
+var pipedata string
 var cfg *Config
 
 func main() {
+	debug = contains(os.Args, "debug")
+	if termutil.Isatty(os.Stdin.Fd()) {
+		pipedata = ""
+	} else {
+		pipedata = getDataFromPipe()
+	}
+
 	if len(os.Args) < 2 {
 		fatalf("Not enough Arguments")
 	}
@@ -73,6 +86,7 @@ func main() {
 
 	// read config
 	cfg = readConfig()
+	extractConfig()
 
 	switch op {
 	case "add":
@@ -89,8 +103,28 @@ func main() {
 
 }
 
+func getDataFromPipe() string {
+	_, err := os.Stdin.Stat()
+	if err != nil {
+		panic(err)
+	}
+
+	reader := bufio.NewReader(os.Stdin)
+	var output []rune
+
+	for {
+		input, _, err := reader.ReadRune()
+		if err != nil && err == io.EOF {
+			break
+		}
+		output = append(output, input)
+	}
+
+	return string(output)
+}
+
 func handleAdd() {
-	if len(os.Args) < 4 {
+	if len(os.Args) < 3 {
 		fatalf("Not enough arguments")
 	}
 
@@ -105,7 +139,9 @@ func handleAdd() {
 func completeBody(r *request) {
 	fields := mapArgs()
 
-	if val, ok := fields["data"]; ok {
+	if pipedata != "" {
+		r.body = pipedata
+	} else if val, ok := fields["data"]; ok {
 		r.body = val
 	} else if val, ok := fields["f"]; ok {
 		bytes, err := ioutil.ReadFile(val)
@@ -148,7 +184,7 @@ func handleUpdate() {
 
 func handleGet() {
 	id := ""
-	if len(os.Args) >= 4 {
+	if len(os.Args) >= 4 && !strings.Contains(os.Args[3], "=") {
 		id = os.Args[3]
 	}
 	r := &request{
@@ -178,7 +214,7 @@ type request struct {
 }
 
 func (r *request) url() string {
-	val := cfg.Baseurl + "/" + r.modelType
+	val := getBaseURL() + "/" + r.modelType
 	if r.id != "" {
 		val += "/" + r.id
 	}
@@ -190,14 +226,23 @@ func issueRequest(r *request) {
 		Timeout: time.Second * 10,
 	}
 
+	debugf(strings.ToUpper(r.method))
 	url := r.url()
+	debugf(url)
 
 	req, err := http.NewRequest(r.method, url, nil)
 	if err != nil {
 		fatal(err)
 	}
+	if r.body != "" {
+		debugf("body: %s", r.body)
+		req.Header.Set("Content-Type", "application/json")
+		req.Body = ioutil.NopCloser(bytes.NewReader([]byte(r.body)))
+	}
+
 	res, err := netClient.Do(req)
 	fatal(err)
+	debugf("Status Code: %v", res.StatusCode)
 
 	if res.StatusCode >= 400 && res.StatusCode < 500 {
 		fatalf(res.Status)
@@ -210,31 +255,56 @@ func issueRequest(r *request) {
 	if err != nil {
 		fatal(err)
 	}
-	fmt.Println(string(bytes))
+	if len(bytes) == 0 && r.body != "" {
+		fmtJSON(r.body)
+	} else if len(bytes) > 0 {
+		fmtJSON(string(bytes))
+	}
 
 }
 
+func extractConfig() {
+	fields := mapArgs()
+
+	if base, ok := fields["baseurl"]; ok {
+		cfg.Baseurl = base
+	}
+	if pretty, ok := fields["pretty"]; ok {
+		result, err := strconv.ParseBool(pretty)
+		fatal(err)
+		cfg.PrettyJSON = result
+	}
+}
+
 func readConfig() *Config {
+	myconfig := &Config{
+		Baseurl:    "",
+		PrettyJSON: true,
+	}
+
 	// Read from .prefs file in home dir
 	dir, err := homedir.Dir()
 	if err != nil {
-		fatal(err)
+		return myconfig
 	}
 	configFile := filepath.Join(dir, ".prefs_command")
 	debugf("Reading configuration from %s", configFile)
 
 	if _, err := os.Stat(configFile); err != nil {
-		fatalf("No Configuration")
+		// fatalf("No Configuration")
+		return myconfig
 	}
 
 	bytes, err := ioutil.ReadFile(configFile)
 	if err != nil {
-		fatal(err)
+		// fatal(err)
+		return myconfig
 	}
-	var myconfig *Config
+
 	err = json.Unmarshal(bytes, &myconfig)
 	if err != nil {
-		fatal(err)
+		// fatal(err)
+		return myconfig
 	}
 	return myconfig
 }
@@ -242,13 +312,16 @@ func readConfig() *Config {
 func handleConfigureCommand() {
 	configureCmd := flag.NewFlagSet("configure", flag.ExitOnError)
 	baseURL := configureCmd.String("baseurl", "http://127.0.0.1:4201", "Base Url where preferences service is located")
+	pretty := configureCmd.Bool("prettyJSON", true, "Format the JSON")
 
 	configureCmd.Parse(os.Args[2:])
 	if configureCmd.Parsed() {
 		myconfig := new(Config)
 		myconfig.Baseurl = *baseURL
+		myconfig.PrettyJSON = *pretty
 
 		debugf("Configuration: BaseURL:  %s", myconfig.Baseurl)
+		debugf("Configuration: PrettyJSON:  %v", myconfig.PrettyJSON)
 
 		dir, err := homedir.Dir()
 		if err != nil {
@@ -295,7 +368,7 @@ func mapArgs() map[string]string {
 		if strings.Contains(os.Args[i], "=") {
 			parts := strings.Split(os.Args[i], "=")
 			if len(parts) == 2 {
-				fields[parts[0]] = parts[1]
+				fields[strings.ToLower(parts[0])] = parts[1]
 			}
 		}
 	}
@@ -315,15 +388,6 @@ func printUsage(err error) {
 	if err != nil {
 		fmt.Printf("ERROR: %s\n", err.Error())
 	}
-}
-
-func makeRequest(cmd *command) error {
-	// var netClient = &http.Client{
-	// 	Timeout: time.Second * 10,
-	// }
-
-	// response, _ := netClient.Get(cmd.url())
-	return nil
 }
 
 // Make a url for the command
@@ -363,6 +427,8 @@ func makeDefinition(fields map[string]string) (*models.PreferenceDefinition, err
 
 	if val, ok := fields["id"]; ok {
 		item.ID = val
+	} else {
+		item.ID = makeUUID()
 	}
 	if val, ok := fields["name"]; ok {
 		item.Name = val
@@ -394,6 +460,8 @@ func makeCategory(fields map[string]string) (*models.Category, error) {
 
 	if val, ok := fields["id"]; ok {
 		item.ID = val
+	} else {
+		item.ID = makeUUID()
 	}
 	if val, ok := fields["name"]; ok {
 		item.Name = val
@@ -414,6 +482,8 @@ func makeOwner(fields map[string]string) (*models.PreferenceOwner, error) {
 
 	if val, ok := fields["id"]; ok {
 		item.ID = val
+	} else {
+		item.ID = makeUUID()
 	}
 	if val, ok := fields["active"]; ok {
 		item.Active = val
@@ -428,8 +498,11 @@ func makeOwner(fields map[string]string) (*models.PreferenceOwner, error) {
 func makeType(fields map[string]string) (*models.OwnerType, error) {
 	item := &models.OwnerType{}
 
+	// item.Definitions = make([]string, 0, 0)
 	if val, ok := fields["id"]; ok {
 		item.ID = val
+	} else {
+		item.ID = makeUUID()
 	}
 	if val, ok := fields["name"]; ok {
 		item.Name = val
@@ -438,4 +511,35 @@ func makeType(fields map[string]string) (*models.OwnerType, error) {
 		item.Description = val
 	}
 	return item, nil
+}
+
+func makeUUID() string {
+	uid, err := uuid.NewRandom()
+	fatal(err)
+	debugf(uid.String())
+	return uid.String()
+}
+
+func fmtJSON(data string) {
+	if cfg.PrettyJSON {
+		var out bytes.Buffer
+		err := json.Indent(&out, ([]byte)(data), "", "  ")
+		fatal(err)
+		fmt.Print(out.String())
+	} else {
+		fmt.Print(data)
+	}
+}
+
+func getBaseURL() string {
+	// First check the args
+	baseurl := cfg.Baseurl
+	if baseurl == "" {
+		fatalf("No Baseurl. Please provide a base url argument or run the configure command")
+	}
+	if strings.HasSuffix(baseurl, "/") {
+		baseurl = baseurl[:len(baseurl)-1]
+	}
+
+	return baseurl
 }

@@ -72,3 +72,11 @@
 [prune]
   go-tests = true
   unused-packages = true
+
+[[constraint]]
+  name = "github.com/google/uuid"
+  version = "0.2.0"
+
+[[constraint]]
+  branch = "master"
+  name = "github.com/andrew-d/go-termutil"

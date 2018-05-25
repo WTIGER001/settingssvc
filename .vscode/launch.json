@@ -12,7 +12,7 @@
             "remotePath": "",
             "port": 2345,
             "host": "127.0.0.1",
-            "program": "${workspaceRoot}/src/cmd/settings-server/main.go",
+            "program": "${workspaceRoot}/src/github.com/wtiger001/settingssvc/cmd/settings-server/main.go",
             "env": {},
             "args": [
                 "--port=4201"

@@ -2,8 +2,9 @@ package store
 
 import (
 	"fmt"
-	"github.com/wtiger001/settingssvc/models"
 	"os"
+
+	"github.com/wtiger001/settingssvc/models"
 
 	"github.com/go-pg/pg"
 	"github.com/go-pg/pg/orm"
@@ -28,7 +29,6 @@ func (sql *SQLStore) InitStore() error {
 		Password: "settings",
 	})
 
-	
 	schemaName := os.Getenv("SETTINGS_SCHEMA")
 	fmt.Printf("Schema Name %s\n", schemaName)
 	if schemaName != "" {
@@ -147,36 +147,37 @@ func (sql *SQLStore) StoreProfile(profile *models.Profile) error {
 
 // TypeExists ...
 func (sql *SQLStore) TypeExists(id string) (bool, error) {
-	item := &models.OwnerType{ID: id}
-	count, err := sql.db.Model(item).Count()
+	item := &models.OwnerType{}
+	count, err := sql.db.Model(item).Where("id=?", id).Count()
+	fmt.Printf("FOUND TYPES %d for id : %s\n", count, item.ID)
 	return count > 0, err
 }
 
 // DefinitionExists ...
 func (sql *SQLStore) DefinitionExists(id string) (bool, error) {
-	item := &models.PreferenceDefinition{ID: id}
-	count, err := sql.db.Model(item).Count()
+	item := &models.PreferenceDefinition{}
+	count, err := sql.db.Model(item).Where("id=?", id).Count()
 	return count > 0, err
 }
 
 // CategoryExists ...
 func (sql *SQLStore) CategoryExists(id string) (bool, error) {
-	item := &models.Category{Name: id}
-	count, err := sql.db.Model(item).Count()
+	item := &models.Category{}
+	count, err := sql.db.Model(item).Where("id=?", id).Count()
 	return count > 0, err
 }
 
 // OwnerExists ...
 func (sql *SQLStore) OwnerExists(id string) (bool, error) {
-	item := &models.PreferenceOwner{ID: id}
-	count, err := sql.db.Model(item).Count()
+	item := &models.PreferenceOwner{}
+	count, err := sql.db.Model(item).Where("id=?", id).Count()
 	return count > 0, err
 }
 
 // ProfileExists ..
 func (sql *SQLStore) ProfileExists(id string, version int) (bool, error) {
-	item := &models.Profile{ID: id, Version: int64(version)}
-	count, err := sql.db.Model(item).Count()
+	item := &models.Profile{}
+	count, err := sql.db.Model(item).Where("id=?", id).Where("version=?", version).Count()
 	return count > 0, err
 }
 

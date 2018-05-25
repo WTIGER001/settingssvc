@@ -14,6 +14,12 @@
   revision = "de5bf2ad457846296e2031421a34e2568e304e35"
 
 [[projects]]
+  branch = "master"
+  name = "github.com/andrew-d/go-termutil"
+  packages = ["."]
+  revision = "009166a695a2f516c749a26b4ac1f183d89aa336"
+
+[[projects]]
   name = "github.com/asaskevich/govalidator"
   packages = ["."]
   revision = "ccb8e960c48f04d6935e72476ae4a51028f9e22f"
@@ -106,6 +112,12 @@
   ]
   revision = "1e63a7fcab7d4389be48b02a4997c87771fcfae8"
   version = "v6.13.2"
+
+[[projects]]
+  name = "github.com/google/uuid"
+  packages = ["."]
+  revision = "064e2069ce9c359c118179501254f67d7d37ba24"
+  version = "0.2"
 
 [[projects]]
   name = "github.com/jessevdk/go-flags"
@@ -202,6 +214,6 @@
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "334d693081cac49099eb30d37de57a6ed395c45dd21a9542b833868d840ff2f4"
+  inputs-digest = "99645d18b4711049b69ed76604d8dd1b2e1eac08fe60c262825db5657048f0ce"
   solver-name = "gps-cdcl"
   solver-version = 1
